@@ -11,30 +11,44 @@ const fs = require('fs');
 // need to use command-line arguments
 const input = process.argv.slice(2);
 
-const fetcher = function(url, path) {
+// use readline
+const readline = require('readline');
+
+const fetcher = function() {
   // first check if the path is valid
-  fs.access(input[1], (err) => {
+  let path = input[1];
+  let pathArr = path.split("");
+  let index = 0;
+  let pathOnlyArr = [];
+  for (let i = 0; i < pathArr.length; i++) {
+    if (pathArr[i] === "/") {
+      index = i;
+    }
+  }
+  for (let i = 0; i <= index; i++) {
+    pathOnlyArr.push(pathArr[i]);
+  }
+  let pathOnly = pathOnlyArr.join("");
+  // could also have checked with fs.exists(path, callback)
+  fs.stat(pathOnly, (err) => {
     // if no error i.e. valid path
     if (!err) {
       // make the request and write the file
       request(`${input[0]}`, (error, response, body) => {
         // if there is no error, proceed to download file
-        if (!err) {
+        if (response.statusCode >= 300) {
+          // if the given URL results in an error or non-200 result
+          // terminate the app and explain what went wrong
+          // don't write response to the file
+          console.log(`You encountered an error with status code ${response.statusCode}`)
+        } else if (!error) {
           fs.writeFile(input[1], body, () => {
             let stats = fs.statSync(`${input[1]}`);
             let filesize = stats.size;
             console.log(`Downloaded and saved ${filesize} bytes to ${input[1]}`)
           })
-        } else {
-          // if the given URL results in an error or non-200 result
-          // terminate the app and explain what went wrong
-          // don't write response to the file
-          console.log(`You encountered an error with status code ${error}`)
         }
       })
-    } else {
-      // if path is not valid, fail the download
-      console.log("This path is not valid!");
     }
   })
 };
