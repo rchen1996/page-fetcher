@@ -62,8 +62,10 @@ const fetcher = function() {
     // file exists
     if (!err) {
       rl.question('The file already exists. If you would like to overwrite the file, type y and hit enter\n', (answer) => {
-        if (answer = "y") {
+        if (answer === "y") {
           requestServer();
+        } else {
+          process.exit();
         }
       })
     } else {
